@@ -1,76 +1,61 @@
-useEffect(() => {
-  const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
+'use client';
 
-  if (!wsUrl) {
-    console.error('WebSocket URL not defined');
-    return;
-  }
+import { useEffect, useRef, useState } from 'react';
 
-  const ws = new WebSocket(wsUrl);
-  socketRef.current = ws;
+const RouletteGame = ({ initialGame }: any) => {
 
-  ws.onopen = () => {
-    ws.send(JSON.stringify({
-      action: 'join-game',
-      gameId: gameIdRef.current
-    }));
-  };
+  const [game, setGame] = useState(initialGame);
+  const [isSpinning, setIsSpinning] = useState(false);
 
-  ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
+  const socketRef = useRef<WebSocket | null>(null);
+  const gameIdRef = useRef<string | null>(initialGame?.id ?? null);
 
-    switch (data.event) {
-      case 'GAME_UPDATED':
-        if (data.data.id === gameIdRef.current) {
-          setGame(data.data);
-        }
-        break;
+  // ✅ এখানে useEffect থাকবে (INSIDE component)
+  useEffect(() => {
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
 
-      case 'NEW_GAME_STARTED':
-        gameIdRef.current = data.data.id;
-        setGame(data.data);
-        setIsSpinning(false);
-
-        ws.send(JSON.stringify({
-          action: 'join-game',
-          gameId: data.data.id
-        }));
-        break;
-
-      case 'BET_PLACED':
-        setGame(prev => ({
-          ...prev,
-          bets: [...prev.bets, data.data]
-        }));
-        break;
-
-      case 'SPIN_STARTED':
-        setGame(prev => ({
-          ...prev,
-          status: 'SPINNING'
-        }));
-        setIsSpinning(true);
-        break;
-
-      case 'GAME_RESULT':
-        setGame(prev => ({
-          ...prev,
-          status: 'COMPLETED',
-          result: data.data.result,
-          bets: prev.bets.map(bet => ({
-            ...bet,
-            payout: data.data.bets.find(
-              (b: GameResultBet) => b.id === bet.id
-            )?.payout
-          }))
-        }));
-        setIsSpinning(false);
-        break;
+    if (!wsUrl) {
+      console.error('WebSocket URL not defined');
+      return;
     }
-  };
 
-  return () => {
-    ws.close();
-  };
+    const ws = new WebSocket(wsUrl);
+    socketRef.current = ws;
 
-}, []); // ✅ keep empty (no warning now)
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        action: 'join-game',
+        gameId: gameIdRef.current
+      }));
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      switch (data.event) {
+        case 'GAME_UPDATED':
+          if (data.data.id === gameIdRef.current) {
+            setGame(data.data);
+          }
+          break;
+
+        case 'NEW_GAME_STARTED':
+          gameIdRef.current = data.data.id;
+          setGame(data.data);
+          setIsSpinning(false);
+          break;
+      }
+    };
+
+    return () => {
+      ws.close();
+    };
+
+  }, []); // ✅ valid
+
+  return (
+    <div>Game Page</div>
+  );
+};
+
+export default RouletteGame;
