@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 const SideBar = () => {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarOpen] = useState(false);
 
     return (
         <aside 
