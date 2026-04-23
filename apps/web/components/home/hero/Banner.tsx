@@ -1,5 +1,3 @@
-import { ChevronRight } from 'lucide-react';
-
 const Banner = () => (
   <div className="relative bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 rounded-2xl p-8 overflow-hidden">
     <div className="relative z-10 flex items-center justify-between">
